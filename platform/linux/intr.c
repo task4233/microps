@@ -64,8 +64,7 @@ int intr_raise_irq(unsigned int irq)
     return pthread_kill(tid, (int)irq);
 }
 
-static void *
-intr_thread(void *arg)
+static void *intr_thread(void *arg)
 {
     int terminate = 0, sig, err;
     struct irq_entry *entry;
