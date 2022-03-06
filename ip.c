@@ -281,7 +281,7 @@ static void ip_input(const uint8_t *data, size_t len, struct net_device *dev)
     {
         if (entry->type == hdr->protocol)
         {
-            entry->handler(data, len, hdr->src, hdr->dst, iface);
+            entry->handler((uint8_t *)hdr + hlen, total - hlen, hdr->src, hdr->dst, iface);
             return;
         }
     }
