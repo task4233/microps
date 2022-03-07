@@ -20,6 +20,7 @@
 #define ARP_OP_REPLY 2
 
 #define ARP_CACHE_SIZE 32
+#define ARP_CACHE_TIMEOUT_SECONDS 30
 
 #define ARP_CACHE_STATE_FREE 0
 #define ARP_CACHE_STATE_INCOMPLETE 1
@@ -315,7 +316,7 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha)
     }
     if (cache->state == ARP_CACHE_STATE_INCOMPLETE)
     {
-        pthread_mutex_unlock(&mutex);
+        mutex_unlock(&mutex);
         arp_request(iface, pa); // just in case packet loss
         return ARP_RESOLVE_INCOMPLETE;
     }
@@ -325,7 +326,43 @@ int arp_resolve(struct net_iface *iface, ip_addr_t pa, uint8_t *ha)
     return ARP_RESOLVE_FOUND;
 }
 
+static void arp_timer_handler(void)
+{
+    struct arp_cache *entry;
+    struct timeval now, diff;
+
+    mutex_lock(&mutex);
+    gettimeofday(&now, NULL);
+
+    for (entry = caches; entry < tailof(caches); ++entry)
+    {
+        if (entry->state != ARP_CACHE_STATE_FREE && entry->state != ARP_CACHE_STATE_STATIC)
+        {
+            timersub(&now, &entry->timestamp, &diff);
+            if (diff.tv_sec >= ARP_CACHE_TIMEOUT_SECONDS)
+            {
+                arp_cache_delete(entry);
+            }
+        }
+    }
+    mutex_unlock(&mutex);
+}
+
 int arp_init(void)
 {
-    return net_protocol_register(NET_PROTOCOL_TYPE_ARP, arp_input);
+    struct timeval interval = {1, 0}; // 1s
+
+    if (net_protocol_register(NET_PROTOCOL_TYPE_ARP, arp_input) == -1)
+    {
+        errorf("failed net_protocol_register()");
+        return -1;
+    }
+
+    if (net_timer_register(interval, arp_timer_handler) == -1)
+    {
+        errorf("failed net_timer_register()");
+        return -1;
+    }
+
+    return 0;
 }
