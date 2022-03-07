@@ -109,6 +109,9 @@ struct net_device *loopback_init(void)
     }
     dev->type = NET_DEVICE_FLAG_LOOPBACK;
     dev->mtu = LOOPBACK_MTU;
+    dev->hlen = 0;
+    dev->alen = 0;
+    dev->flags = NET_DEVICE_FLAG_LOOPBACK;
     dev->ops = &loopback_ops;
 
     lo = memory_alloc(sizeof(*lo));
@@ -121,7 +124,6 @@ struct net_device *loopback_init(void)
     mutex_init(&lo->mutex);
     queue_init(&lo->queue);
     dev->priv = lo;
-
     if (net_device_register(dev) == -1) {
         errorf("net_device_register() failure");
         return NULL;

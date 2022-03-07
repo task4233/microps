@@ -147,10 +147,10 @@ struct net_iface *net_device_get_iface(struct net_device *dev, int family)
     {
         if (entry->family == family)
         {
-            return entry;
+            break;
         }
     }
-    return NULL;
+    return entry;
 }
 
 int net_device_output(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst)

@@ -117,6 +117,7 @@ struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask)
     if (!iface)
     {
         errorf("memory_alloc() failure");
+        memory_free(iface);
         return NULL;
     }
     NET_IFACE(iface)->family = NET_IFACE_FAMILY_IP;
@@ -124,6 +125,7 @@ struct ip_iface *ip_iface_alloc(const char *unicast, const char *netmask)
     if (ip_addr_pton(unicast, &iface->unicast) != 0)
     {
         errorf("failed to convert unicast: %s", unicast);
+        memory_free(iface);
         return NULL;
     }
 
