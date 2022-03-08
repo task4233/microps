@@ -107,7 +107,7 @@ struct net_device *loopback_init(void)
         errorf("net_device_alloc() failure");
         return NULL;
     }
-    dev->type = NET_DEVICE_FLAG_LOOPBACK;
+    dev->type = NET_DEVICE_TYPE_LOOPBACK;
     dev->mtu = LOOPBACK_MTU;
     dev->hlen = 0;
     dev->alen = 0;
@@ -129,7 +129,7 @@ struct net_device *loopback_init(void)
         return NULL;
     }
 
-    intr_request_irq(LOOPBACK_IRQ, loopback_isr, INTR_IRQ_SHARED, dev->name, dev);
+    intr_request_irq(lo->irq, loopback_isr, INTR_IRQ_SHARED, dev->name, dev);
 
     debugf("initialized, dev=%s", dev->name);
     return dev;

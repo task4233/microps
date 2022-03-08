@@ -268,7 +268,7 @@ static void arp_input(const uint8_t *data, size_t len, struct net_device *dev)
         if (!merge)
         {
             mutex_lock(&mutex);
-            arp_cache_insert(spa, msg->spa);
+            arp_cache_insert(spa, msg->sha);
             mutex_unlock(&mutex);
         }
         if (ntoh16(msg->hdr.op) == ARP_OP_REQUEST)

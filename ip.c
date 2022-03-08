@@ -277,13 +277,14 @@ int ip_iface_register(struct net_device *dev, struct ip_iface *iface)
         errorf("failed net_device_add_iface");
         return -1;
     }
-    iface->next = ifaces;
-    ifaces = iface;
     if (!ip_route_add(iface->unicast & iface->netmask, iface->netmask, IP_ADDR_ANY, iface))
     {
         errorf("failed ip_route_add()");
         return -1;
     }
+
+    iface->next = ifaces;
+    ifaces = iface;
 
     infof("registered: dev=%s, unicast=%s, netmask=%s, broadcast=%s", dev->name,
           ip_addr_ntop(iface->unicast, addr1, sizeof(addr1)),

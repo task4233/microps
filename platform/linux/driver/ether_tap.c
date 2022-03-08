@@ -121,8 +121,7 @@ static int ether_tap_open(struct net_device *dev)
 
 static int ether_tap_close(struct net_device *dev)
 {
-    close(PRIV(dev)->fd);
-    return 0;
+    return close(PRIV(dev)->fd);
 }
 
 static ssize_t ether_tap_write(struct net_device *dev, const uint8_t *frame, size_t flen)
