@@ -87,6 +87,41 @@ char *ip_addr_ntop(ip_addr_t n, char *p, size_t size)
     return p;
 }
 
+int ip_endpoint_pton(const char *p, struct ip_endpoint *n)
+{
+    char *sep;
+    char addr[IP_ADDR_STR_LEN] = {};
+    long int port;
+
+    sep = strrchr(p, ':');
+    if (!sep)
+    {
+        return -1;
+    }
+    memcpy(addr, p, sep - p);
+    if (ip_addr_pton(addr, &n->addr) == -1)
+    {
+        return -1;
+    }
+    port = strtol(sep + 1, NULL, 10);
+    if (port <= 0 || port > UINT16_MAX)
+    {
+        return -1;
+    }
+    n->port = hton16(port);
+    return 0;
+}
+
+char *ip_endpoint_ntop(const struct ip_endpoint *n, char *p, size_t size)
+{
+    size_t offset;
+
+    ip_addr_ntop(n->addr, p, size);
+    offset = strlen(p);
+    snprintf(p + offset, size - offset, ":%d", ntoh16(n->port));
+    return p;
+}
+
 static void ip_dump(const uint8_t *data, size_t len)
 {
     struct ip_hdr *hdr;
@@ -154,7 +189,7 @@ static struct ip_route *ip_route_lookup(ip_addr_t dst)
     // longest match
     for (route = routes; route; route = route->next)
     {
-        if ((dst & route->netmask) == route->netmask)
+        if ((dst & route->netmask) == route->network)
         {
             if (!candidate || ntoh32(candidate->netmask) < ntoh32(route->netmask))
             {
@@ -474,6 +509,7 @@ ssize_t ip_output(uint8_t protocol, const uint8_t *data, size_t len, ip_addr_t s
     iface = route->iface;
     if (src != IP_ADDR_ANY && src != iface->unicast)
     {
+        infof("iface->unicast: %s", ip_addr_ntop(iface->unicast, addr, sizeof(addr)));
         errorf("unable to output with specified source address, addr=%s", ip_addr_ntop(src, addr, sizeof(addr)));
         return -1;
     }
