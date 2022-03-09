@@ -118,6 +118,9 @@ static void *intr_thread(void *arg)
         case SIGUSR1: // intentionally interruption for popping data
             net_softirq_handler();
             break;
+        case SIGUSR2: // for capturing evnet signal
+            net_event_handler();
+            break;
         default:
             for (entry = irqs; entry; entry = entry->next)
             {
@@ -173,5 +176,6 @@ int intr_init(void)
     sigaddset(&sigmask, SIGHUP);
     sigaddset(&sigmask, SIGALRM);
     sigaddset(&sigmask, SIGUSR1);
+    sigaddset(&sigmask, SIGUSR2);
     return 0;
 }
