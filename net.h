@@ -34,6 +34,7 @@
 
 #define NET_IFACE(x) ((struct net_iface *)(x))
 
+// net_device is for preserving a device information
 struct net_device
 {
     struct net_device *next;  // a pointer to next device

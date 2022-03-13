@@ -14,6 +14,7 @@
 
 #define PRIV(x) ((struct loopback *)x->priv)
 
+// loopback manages a loopback device
 struct loopback
 {
     int irq;
@@ -21,6 +22,7 @@ struct loopback
     struct queue_head queue;
 };
 
+// loopback_queue_entry manages a metadata related to loopback entry
 struct loopback_queue_entry
 {
     uint16_t type;
@@ -28,6 +30,7 @@ struct loopback_queue_entry
     uint8_t data[]; // flexible array member
 };
 
+// loopback_transmit pushs 
 static int loopback_transmit(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst)
 {
     struct loopback_queue_entry *entry;
@@ -96,6 +99,10 @@ static struct net_device_ops loopback_ops = {
     .transmit = loopback_transmit,
 };
 
+// loopback_init
+// - allocates memory for a device
+// - registers the device
+// - sets a handler for an interruption
 struct net_device *loopback_init(void)
 {
     struct net_device *dev;

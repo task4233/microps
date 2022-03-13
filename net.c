@@ -49,6 +49,7 @@ static struct net_protocol *protocols;
 static struct net_timer *timers;
 static struct net_event *events;
 
+// net_device_alloc allocates a memory for a new net device
 struct net_device *net_device_alloc(void)
 {
     struct net_device *dev;
@@ -62,6 +63,7 @@ struct net_device *net_device_alloc(void)
     return dev;
 }
 
+// net_device_register registers the given device
 // NOTE: must not be called after net_run()
 int net_device_register(struct net_device *dev)
 {
@@ -82,6 +84,8 @@ int net_device_register(struct net_device *dev)
     return 0;
 }
 
+// net_device_open opens the given device
+// if the device is opened, the status should be (flag & NET_DEVICE_FLAG_UP) == 1
 static int net_device_open(struct net_device *dev)
 {
     if (!dev)
@@ -110,6 +114,8 @@ static int net_device_open(struct net_device *dev)
     return 0;
 }
 
+// net_device_close closes the given device
+// if the device is closed, the status should be (flag & NET_DEVICE_FLAG_UP) == 0
 static int net_device_close(struct net_device *dev)
 {
     if (!dev)
@@ -173,6 +179,7 @@ struct net_iface *net_device_get_iface(struct net_device *dev, int family)
     return entry;
 }
 
+// net_device_output ?
 int net_device_output(struct net_device *dev, uint16_t type, const uint8_t *data, size_t len, const void *dst)
 {
     if (!dev)
@@ -269,6 +276,7 @@ int net_timer_handler(void)
     return 0;
 }
 
+// net_input_handler recieves a packet given from a device and sends it to a protocol stack
 int net_input_handler(uint16_t type, const uint8_t *data, size_t len, struct net_device *dev)
 {
     struct net_protocol *proto;
@@ -367,6 +375,7 @@ void net_raise_event()
     intr_raise_irq(INTR_IRQ_EVENT);
 }
 
+// net_run opens all registered devices
 int net_run(void)
 {
     struct net_device *dev;
@@ -386,6 +395,7 @@ int net_run(void)
     return 0;
 }
 
+// net_shutdown closes all registered devices
 void net_shutdown(void)
 {
     struct net_device *dev;
@@ -398,6 +408,7 @@ void net_shutdown(void)
     debugf("shutting down");
 }
 
+// net_init initialized all protocols
 int net_init(void)
 {
     if (intr_init() == -1)

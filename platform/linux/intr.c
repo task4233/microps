@@ -9,24 +9,30 @@
 #include "util.h"
 #include "net.h"
 
+// irq_entry manages IRQ(Interrupt Request Query)s
 struct irq_entry
 {
-    struct irq_entry *next;
-    unsigned int irq;
-    int (*handler)(unsigned int irq, void *dev);
-    int flags;
-    char name[16];
-    void *dev;
+    struct irq_entry *next; // a pointer to next entry
+    unsigned int irq; // IRQ number which identifies each entry
+    int (*handler)(unsigned int irq, void *dev); // IRQ handler which is invoked on each interruption
+    int flags; // if specified INTR_IRQ_SHARED, the entry can be shared
+    char name[16]; // name for debugging
+    void *dev; // a device occurring an interruption
 };
 
 /* NOTE: if you want to add/delete the entries after intr_run(), you need to protect these lists with a mutex. */
 static struct irq_entry *irqs;
 
+// a set of signals
 static sigset_t sigmask;
 
+// a thread ID for an interruption
 static pthread_t tid;
+
+// barrier is for synchronizing each thread
 static pthread_barrier_t barrier;
 
+// intr_request_irq 
 int intr_request_irq(unsigned int irq, int (*handler)(unsigned int irq, void *dev), int flags, const char *name, void *dev)
 {
     struct irq_entry *entry;
@@ -61,6 +67,7 @@ int intr_request_irq(unsigned int irq, int (*handler)(unsigned int irq, void *de
     return 0;
 }
 
+// intr_raise_irq sends a signal to a thread for managing an interruption
 int intr_raise_irq(unsigned int irq)
 {
     return pthread_kill(tid, (int)irq);
@@ -84,6 +91,7 @@ static int intr_timer_setup(struct itimerspec *interval)
     return 0;
 }
 
+// intr_thread runs thread for waiting signals corresponding orders as an entrypoint 
 static void *intr_thread(void *arg)
 {
     const struct timespec ts = {0, 1000000}; // 1ms
@@ -109,7 +117,7 @@ static void *intr_thread(void *arg)
         }
         switch (sig)
         {
-        case SIGHUP:
+        case SIGHUP: // for notifying a signal to an interrupting thread
             terminate = 1;
             break;
         case SIGALRM: // for periodic execution
@@ -137,6 +145,7 @@ static void *intr_thread(void *arg)
     return NULL;
 }
 
+// intr_run runs a thread for manaing one interruption
 int intr_run(void)
 {
     int err;
@@ -157,6 +166,7 @@ int intr_run(void)
     return 0;
 }
 
+// intr_shutdown finishs a thread for interruption
 void intr_shutdown(void)
 {
     if (pthread_equal(tid, pthread_self()) != 0)
@@ -168,6 +178,7 @@ void intr_shutdown(void)
     pthread_join(tid, NULL);
 }
 
+// intr_init initializes interruption
 int intr_init(void)
 {
     tid = pthread_self();
